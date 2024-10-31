@@ -19,5 +19,10 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "@unkey/ratelimit": "^0.4.5"
+  }
 }
+
+

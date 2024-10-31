@@ -1,99 +1,69 @@
-import Image from "next/image";
-import { Button } from "@repo/ui/button";
-import styles from "./page.module.css";
 
-export default function Home() {
+
+'use client'
+
+import { useState } from 'react'
+import { RateLimitIndicator, RateLimitError } from '@your-org/ui'
+import { createApiFetcher } from '@your-org/api'
+
+const api = createApiFetcher(process.env.NEXT_PUBLIC_API_URL || '')
+
+interface HelloResponse {
+  message: string
+  timestamp: string
+}
+
+export default function HomePage() {
+  const [response, setResponse] = useState<HelloResponse | null>(null)
+  const [error, setError] = useState<any>(null)
+  const [rateLimit, setRateLimit] = useState({
+    remaining: 5,
+    total: 5,
+    reset: Date.now() / 1000 + 60,
+  })
+
+  const fetchData = async () => {
+    const result = await api<HelloResponse>('/api/hello')
+
+    if (result.error) {
+      setError(result.error)
+      setResponse(null)
+    } else {
+      setResponse(result.data || null)
+      setError(null)
+    }
+
+    setRateLimit({
+      remaining: result.remaining,
+      total: 5,
+      reset: result.reset,
+    })
+  }
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>app/page.tsx</code>
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div className="max-w-4xl mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6">Rate Limited API Example</h1>
+      
+      <div className="space-y-6">
+        <button
+          onClick={fetchData}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Make API Request
+        </button>
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-        <Button appName="web" className={styles.secondary}>
-          Open alert
-        </Button>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file-text.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <RateLimitIndicator {...rateLimit} />
+
+        {error && <RateLimitError error={error} />}
+
+        {response && (
+          <div className="bg-white p-4 rounded shadow">
+            <pre className="whitespace-pre-wrap">
+              {JSON.stringify(response, null, 2)}
+            </pre>
+          </div>
+        )}
+      </div>
     </div>
-  );
+  )
 }
