@@ -61,10 +61,4 @@ This project is organized in a monorepo format using TurboRepo, which helps mana
 ## License
 
 This project is licensed under the MIT License.
-"""
 
-
-with open(file_path, 'w') as file:
-    file.write(readme_content)
-
-file_path
